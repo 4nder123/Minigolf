@@ -1,4 +1,5 @@
 import pygame
+from pygame.constants import MOUSEBUTTONDOWN, MOUSEBUTTONUP
 pygame.init()
 aken = pygame.display.set_mode([1024, 768])
 aken.fill([255,255,255])
@@ -12,7 +13,7 @@ kolmnurk1 = "kolmnurk1.png"
 kolmnurk2 = "kolmnurk2.png"
 liiv = "liiv.png"
 
-# Panin tasemete valiku esialgu käsureale, kuni täpsustame, kes ja kuidas seda teeb
+#Panin tasemete valiku esialgu käsureale, kuni täpsustame, kes ja kuidas seda teeb
 valik = True
 while valik:
     tase = int(input("Vali, mis tasemega väljakul soovite mängida (1 - 5)."))
@@ -21,7 +22,17 @@ while valik:
     else:
         print("Sellist taset pole. Proovige uuesti!")
 
-
+#Klass Pall()
+class Pall():
+    def __init__(self, ekraan, x, y, kiirus):
+        self.x = x
+        self.y = y
+        self.kiirus = kiirus
+        self.ekraan = ekraan
+    
+    #Joonistab ekraanile palli
+    def loo_pall(self):
+        pygame.draw.circle(self.ekraan, "azure", [self.x, self.y], 18)
 
 # Klass Seinad() joonistab aknasse teateriba ning mänguplatsi piiravad seinad 
 class Seinad():
@@ -73,12 +84,15 @@ while mäng_käib:
 
         if event.type == pygame.QUIT:
             mäng_käib = False
-    
+
+    #palli isend
+    pall = Pall(aken , 200, 434, 0)
     # loome isendi klassist Seinad()
     seinad = Seinad(aken,sein_hor,sein_ver)
     # Kutsume seinte loomise meetodit
     seinad.loo_taust()
-    
+    #joonistab palli
+    pall.loo_pall()
     # loome isendi klassist Auk()
     auk = Auk(aken,900,434)
     # Kutsume augu loomise meetodit
@@ -122,7 +136,11 @@ while mäng_käib:
         tõke4.loo_tõke()
         tõke5.loo_tõke()
 
-        
+    #Vaja lisada hiljem palli löömiseks
+    if event.type == MOUSEBUTTONDOWN:
+        pass
+    if event.type == MOUSEBUTTONUP:
+        pass
     #paus
     pygame.time.delay(17)  
     pygame.display.flip()
