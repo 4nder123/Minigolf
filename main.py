@@ -1,13 +1,7 @@
 import pygame
 from pygame.constants import MOUSEBUTTONDOWN, MOUSEBUTTONUP
-import pygame_gui
-
 pygame.init()
-
-pygame.display.set_caption('Minigolf')
 aken = pygame.display.set_mode([1024, 768])
-manager = pygame_gui.UIManager([1024, 768])
-
 aken.fill([255,255,255])
 
 # Piltide määramine
@@ -19,12 +13,22 @@ kolmnurk1 = "kolmnurk1.png"
 kolmnurk2 = "kolmnurk2.png"
 liiv = "liiv.png"
 
+#Panin tasemete valiku esialgu käsureale, kuni täpsustame, kes ja kuidas seda teeb
+valik = True
+while valik:
+    tase = int(input("Vali, mis tasemega väljakul soovite mängida (1 - 5)."))
+    if tase in range(1,6):
+        valik = False
+    else:
+        print("Sellist taset pole. Proovige uuesti!")
+
 #Klass Pall()
 class Pall():
-    def __init__(self, ekraan, x, y, kiirus):
+    def __init__(self, ekraan, x, y, kiirus_x, kiirus_y):
         self.x = x
         self.y = y
-        self.kiirus = kiirus
+        self.kiirus_x = kiirus_x
+        self.kiirus_y = kiirus_y
         self.ekraan = ekraan
         self.alg_koord = [0, 0]
         self.lopp_koord = [0, 0]
@@ -35,7 +39,7 @@ class Pall():
     
     #Arvutatakse muutus hiire algkohast ja pööratakse muutus ümber,
     # et saada palli asukoht 
-    def look(self):
+    def look(self, dt):
 
         self.x += self.kiirus_x * dt
         self.y += self.kiirus_y * dt
@@ -61,13 +65,14 @@ class Pall():
         #Ma arvan, et siia oleks mõistlik kuidagi kiirendus ka lisada
 
 
-
 # Klass Seinad() joonistab aknasse teateriba ning mänguplatsi piiravad seinad 
 class Seinad():
     def __init__(self, ekraan, taustapilt_hor, taustapilt_ver):
         self.taustapilt_hor = taustapilt_hor
         self.taustapilt_ver = taustapilt_ver
         self.ekraan = ekraan
+                
+    def loo_taust(self):
         self.ekraan.fill((139, 217, 72))
         pygame.draw.rect(self.ekraan, "forestgreen", [0,0,1024,100])
         self.sein_hor = pygame.image.load(self.taustapilt_hor)
@@ -77,6 +82,7 @@ class Seinad():
         self.ekraan.blit(self.sein_ver, [0,100])
         self.ekraan.blit(self.sein_ver, [944,100])
 
+
 # Klass Tõkked() joonistab punkti (x, y) valitud tõkke 
 class Tõkked():
     def __init__(self, ekraan, pilt, x, y):
@@ -84,6 +90,8 @@ class Tõkked():
         self.x = x
         self.y = y
         self.ekraan = ekraan
+                
+    def loo_tõke(self):
         self.tõke = pygame.image.load(self.pilt)
         self.ekraan.blit(self.tõke, [self.x,self.y])
         
@@ -93,93 +101,28 @@ class Auk():
         self.x = x
         self.y = y
         self.ekraan = ekraan
+                
+    def loo_auk(self):
         pygame.draw.circle(self.ekraan, [0,0,0], [self.x,self.y], 25, 0)
 
-# Klass Tasemenupp joonistab taseme valimise nupud
-class Tasemenupp(pygame_gui.elements.UIButton):
-    def __init__(self, ekraan, x, y, tekst):
-        self.x = x
-        self.y = y
-        self.ekraan = ekraan
-        self.tekst = tekst
-        super().__init__(pygame.Rect((self.x,self.y), (50, 50)), self.tekst, manager)
-        
-#Klass Tekstikast väljastab infot
-class Tekstikast(pygame_gui.elements.UITextBox):
-    def __init__(self, ekraan, x, y, laius, kõrgus, tekst):
-        self.x = x
-        self.y = y
-        self.laius = laius
-        self.kõrgus = kõrgus
-        self.ekraan = ekraan
-        self.tekst = tekst
-        super().__init__(self.tekst, pygame.Rect((self.x,self.y), (self.laius, self.kõrgus)), manager)
 
 #----------------------------------------------------------------------
+
 # See on juba mängu enda kood
-<<<<<<< HEAD
-
-# Teade taseme valimiseks
-tasemed = Tekstikast(aken, 50, 5, 110, 35, "Vali tase")
-
-# Tasemenupud
-tasemenupp1 = Tasemenupp(aken, 50, 40, '1')
-tasemenupp2 = Tasemenupp(aken, 110, 40, '2')
-tasemenupp3 = Tasemenupp(aken, 170, 40, '3')
-tasemenupp4 = Tasemenupp(aken, 230, 40, '4')
-tasemenupp5 = Tasemenupp(aken, 290, 40, '5')
-
-kell = pygame.time.Clock()
-tase = 1
-=======
 #Palli isendi loomine enne while loopi, et andmeid üle ei kirjutataks
-pall = Pall(aken , 200, 434, 0)
-
->>>>>>> 2b28a9aa429b0826637bea18116631535194c5fb
+pall = Pall(aken , 200, 434, 0, 0)
+kell = pygame.time.Clock()
 mäng_käib = True
-
 while mäng_käib:
-<<<<<<< HEAD
     dt = kell.tick() / 1000
-        
-=======
     #Hiire positsiooni saamine
     hiire_x, hiire_y = pygame.mouse.get_pos()
 
->>>>>>> 2b28a9aa429b0826637bea18116631535194c5fb
     for event in pygame.event.get():
 
         if event.type == pygame.QUIT:
             mäng_käib = False
-            
-        elif event.type == pygame.USEREVENT: 
-            if event.user_type == pygame_gui.UI_BUTTON_PRESSED: 
-                if event.ui_element == tasemenupp1: 
-                    tase = 1
-                elif event.ui_element == tasemenupp2: 
-                    tase = 2
-                elif event.ui_element == tasemenupp3: 
-                    tase = 3
-                elif event.ui_element == tasemenupp4: 
-                    tase = 4
-                elif event.ui_element == tasemenupp5: 
-                    tase = 5
 
-<<<<<<< HEAD
-        manager.process_events(event)
-    
-    # loome isendi klassist Seinad()
-    seinad = Seinad(aken,sein_hor,sein_ver)
-    
-    #palli isend
-    pall = Pall(aken , 200, 434, 0)
-    #joonistab palli
-    pall.loo_pall()
-    
-    # loome isendi klassist Auk()
-    auk = Auk(aken,900,434)
-        
-=======
         if event.type == MOUSEBUTTONDOWN:
             #Algkoordinaatide salvestamine
             pall.alg_koord[0] = hiire_x
@@ -189,7 +132,7 @@ while mäng_käib:
             pall.lopp_koord[0] = hiire_x
             pall.lopp_koord[1] = hiire_y
             #Palli löömine, muudetakse palli x ja y koordinaati
-            pall.look()
+            pall.look(dt)
 
     # loome isendi klassist Seinad()
     seinad = Seinad(aken,sein_hor,sein_ver)
@@ -202,21 +145,30 @@ while mäng_käib:
     #joonistab palli
     pall.loo_pall()
     
->>>>>>> 2b28a9aa429b0826637bea18116631535194c5fb
     #Vastavalt valitud tasemele lisame tõkked; 1. tasemel tõkkeid pole.
     if tase == 2:
         # loome isendid klassist Tõkked()
         tõke1 = Tõkked(aken,kolmnurk1,150,425)
         tõke2 = Tõkked(aken,kolmnurk2,450,180)
+        # Kutsume tõkke loomise meetodit
+        tõke1.loo_tõke()
+        tõke2.loo_tõke()
     elif tase == 3:
         # loome isendid klassist Tõkked()
         tõke1 = Tõkked(aken,kolmnurk1,150,425)
         tõke2 = Tõkked(aken,liiv,450,180)
+        # Kutsume tõkke loomise meetodit
+        tõke1.loo_tõke()
+        tõke2.loo_tõke()
     elif tase == 4:
         # loome isendid klassist Tõkked()
         tõke1 = Tõkked(aken,kolmnurk1,150,425)
         tõke2 = Tõkked(aken,vesi,450,180)
         tõke3 = Tõkked(aken,liiv,600,400)
+        # Kutsume tõkke loomise meetodit
+        tõke1.loo_tõke()
+        tõke2.loo_tõke()
+        tõke3.loo_tõke()
     elif tase == 5:
         # loome isendid klassist Tõkked()
         tõke1 = Tõkked(aken,liiv,450,180)
@@ -224,11 +176,6 @@ while mäng_käib:
         tõke3 = Tõkked(aken,kivi,100,550)
         tõke4 = Tõkked(aken,kivi,250,525)
         tõke5 = Tõkked(aken,kivi,360,375)
-<<<<<<< HEAD
-    
-    manager.update(dt) 
-    manager.draw_ui(aken) 
-=======
         # Kutsume tõkke loomise meetodit
         tõke1.loo_tõke()
         tõke2.loo_tõke()
@@ -238,7 +185,6 @@ while mäng_käib:
 
     #paus
     pygame.time.delay(17)  
->>>>>>> 2b28a9aa429b0826637bea18116631535194c5fb
     pygame.display.flip()
-    
+
 pygame.quit()
