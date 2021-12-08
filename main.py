@@ -36,12 +36,28 @@ class Pall():
     #Arvutatakse muutus hiire algkohast ja pööratakse muutus ümber,
     # et saada palli asukoht 
     def look(self):
-        x_muutus = self.alg_koord[0] - self.lopp_koord[0]
-        y_muutus = self.alg_koord[1] - self.lopp_koord[1]
-        
-        self.x = self.alg_koord[0] + x_muutus
-        self.y = self.alg_koord[1] + y_muutus
 
+        self.x += self.kiirus_x * dt
+        self.y += self.kiirus_y * dt
+
+        # Palli põrkamine
+        if self.x < 37 or self.x > 640:
+            self.kiirus_x *= -1
+        if self.y < 37 or self.y > 480:
+            self.kiirus_y *= -1
+
+        # Aeglustus
+        if self.kiirus_x > 0:
+            self.kiirus_x -= 1
+        elif self.kiirus_x < 0:
+            self.kiirus_x += 1
+
+        if self.kiirus_y > 0:
+            self.kiirus_y -= 1
+        elif self.kiirus_y < 0:
+            self.kiirus_y += 1
+
+        pygame.draw.circle(aken, "azure", [self.x, self.y], 18)
         #Ma arvan, et siia oleks mõistlik kuidagi kiirendus ka lisada
 
 
