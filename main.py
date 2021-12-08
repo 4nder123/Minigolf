@@ -29,10 +29,24 @@ class Pall():
         self.y = y
         self.kiirus = kiirus
         self.ekraan = ekraan
+        self.alg_koord = [0, 0]
+        self.lopp_koord = [0, 0]
     
     #Joonistab ekraanile palli
     def loo_pall(self):
         pygame.draw.circle(self.ekraan, "azure", [self.x, self.y], 18)
+    
+    #Arvutatakse muutus hiire algkohast ja pööratakse muutus ümber,
+    # et saada palli asukoht 
+    def look(self):
+        x_muutus = self.alg_koord[0] - self.lopp_koord[0]
+        y_muutus = self.alg_koord[1] - self.lopp_koord[1]
+        
+        self.x = self.alg_koord[0] + x_muutus
+        self.y = self.alg_koord[1] + y_muutus
+
+        #Ma aravan, et siia oleks mõistlik kiirendus ka lisada
+
 
 # Klass Seinad() joonistab aknasse teateriba ning mänguplatsi piiravad seinad 
 class Seinad():
@@ -78,25 +92,40 @@ class Auk():
 #----------------------------------------------------------------------
 
 # See on juba mängu enda kood
+#Palli isendi loomine enne while loopi, et andmeid üle ei kirjutataks
+pall = Pall(aken , 200, 434, 0)
+
 mäng_käib = True
 while mäng_käib:
+    #Hiire positsiooni saamine
+    hiire_x, hiire_y = pygame.mouse.get_pos()
+
     for event in pygame.event.get():
 
         if event.type == pygame.QUIT:
             mäng_käib = False
 
-    #palli isend
-    pall = Pall(aken , 200, 434, 0)
+        if event.type == MOUSEBUTTONDOWN:
+            #Algkoordinaatide salvestamine
+            pall.alg_koord[0] = hiire_x
+            pall.alg_koord[1] = hiire_y
+        if event.type == MOUSEBUTTONUP:
+            #Lõppkoordinaatide salvestamine
+            pall.lopp_koord[0] = hiire_x
+            pall.lopp_koord[1] = hiire_y
+            #Palli löömine, muudetakse palli x ja y koordinaati
+            pall.look()
+
     # loome isendi klassist Seinad()
     seinad = Seinad(aken,sein_hor,sein_ver)
     # Kutsume seinte loomise meetodit
     seinad.loo_taust()
-    #joonistab palli
-    pall.loo_pall()
     # loome isendi klassist Auk()
     auk = Auk(aken,900,434)
     # Kutsume augu loomise meetodit
     auk.loo_auk()
+    #joonistab palli
+    pall.loo_pall()
     
     #Vastavalt valitud tasemele lisame tõkked; 1. tasemel tõkkeid pole.
     if tase == 2:
@@ -136,11 +165,6 @@ while mäng_käib:
         tõke4.loo_tõke()
         tõke5.loo_tõke()
 
-    #Vaja lisada hiljem palli löömiseks
-    if event.type == MOUSEBUTTONDOWN:
-        pass
-    if event.type == MOUSEBUTTONUP:
-        pass
     #paus
     pygame.time.delay(17)  
     pygame.display.flip()
