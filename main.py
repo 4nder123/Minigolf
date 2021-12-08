@@ -45,7 +45,7 @@ class Pall():
         self.x = self.alg_koord[0] + x_muutus
         self.y = self.alg_koord[1] + y_muutus
 
-        #Ma aravan, et siia oleks mõistlik kiirendus ka lisada
+        #Ma arvan, et siia oleks mõistlik kuidagi kiirendus ka lisada
 
 
 # Klass Seinad() joonistab aknasse teateriba ning mänguplatsi piiravad seinad 
