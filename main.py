@@ -180,7 +180,9 @@ while mäng_käib:
             #Lõppkoordinaatide salvestamine
             pall.lopp_koord[0] = hiire_x
             pall.lopp_koord[1] = hiire_y
-            pall.look()
+            #Et palli ei saaks liikumise ajal uuesti lüüa
+            if pall.kiirus_x == 0 and pall.kiirus_y == 0:
+                pall.look()
 
 
     # loome isendi klassist Seinad()
