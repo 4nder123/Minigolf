@@ -1,4 +1,5 @@
 import pygame
+from pygame.constants import MOUSEBUTTONDOWN, MOUSEBUTTONUP
 import pygame_gui
 
 pygame.init()
@@ -90,8 +91,6 @@ class Pall():
     def loo_pall(self):
         self.pall = pygame.draw.circle(self.ekraan, "azure", [self.x, self.y], 18)
 
-    # Arvutatakse muutus hiire algkohast ja pööratakse muutus ümber,
-    # et saada palli asukoht
     def liikumine(self, dt):
         #palli liikumine
         self.x += self.kiirus_x * dt
@@ -121,9 +120,16 @@ class Pall():
         else:
             self.pall = pygame.draw.circle(aken, "azure", [self.x, self.y], 18)
 
-    #Siin arvutaks valja x kiiruse ja y kiiruse
+    #X ja Y kiiruse arvutamine koordinaatide muudu järgi
     def look(self):
-        pass
+        loogi_tugevus = 5
+
+        x_muutus = self.alg_koord[0] - self.lopp_koord[0]
+        y_muutus = self.alg_koord[1] - self.lopp_koord[1]
+
+        self.kiirus_x =  x_muutus * loogi_tugevus
+        #palli y liikumise pidi teistpidi keerama millegipärast
+        self.kiirus_y =  y_muutus * loogi_tugevus * -1
 
 # Teade taseme valimiseks
 tasemed = Tekstikast(aken, 50, 5, 110, 35, "Vali tase")
@@ -137,16 +143,12 @@ tasemenupp5 = Tasemenupp(aken, 290, 40, '5')
 
 kell = pygame.time.Clock()
 tase = 1
-all_x = 0
-all_y = 0
-ules_x = 0
-ules_y = 0
 
 mäng_käib = True
 lookis = False
 #viimased kaks numbrid on x kiirus ja y kiirus et palli liikuma panna
-pall1 = Pall(aken, 200, 434, 0, 0)
-pall1.loo_pall()
+pall = Pall(aken, 200, 434, 0, 0)
+pall.loo_pall()
 while mäng_käib:
     # Hiire positsiooni saamine
     hiire_x, hiire_y = pygame.mouse.get_pos()
@@ -169,6 +171,17 @@ while mäng_käib:
                     tase = 5
 
         manager.process_events(event)
+
+        if event.type == MOUSEBUTTONDOWN:
+         #Algkoordinaatide salvestamine
+            pall.alg_koord[0] = hiire_x
+            pall.alg_koord[1] = hiire_y
+        if event.type == MOUSEBUTTONUP:
+            #Lõppkoordinaatide salvestamine
+            pall.lopp_koord[0] = hiire_x
+            pall.lopp_koord[1] = hiire_y
+            pall.look()
+
 
     # loome isendi klassist Seinad()
     seinad = Seinad(aken, sein_hor, sein_ver)
@@ -200,7 +213,7 @@ while mäng_käib:
 
     manager.update(dt)
     manager.draw_ui(aken)
-    pall1.liikumine(dt)
+    pall.liikumine(dt)
     pygame.display.flip()
 
 pygame.quit()
