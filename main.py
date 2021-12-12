@@ -1,3 +1,4 @@
+import math
 import pygame
 from pygame.constants import MOUSEBUTTONDOWN, MOUSEBUTTONUP
 import pygame_gui
@@ -34,18 +35,19 @@ class Seinad():
         self.sein_ver = pygame.image.load(self.taustapilt_ver)
         self.ekraan.blit(self.sein_ver, [0, 100])
         self.ekraan.blit(self.sein_ver, [944, 100])
-
+        self.sein_hor_mask = pygame.mask.from_surface(self.sein_hor)
+        self.sein_ver_mask = pygame.mask.from_surface(self.sein_ver)
 
 # Klass Tõkked() joonistab punkti (x, y) valitud tõkke
 class Tõkked():
-    def __init__(self, ekraan, pilt, x, y):
-        self.pilt = pilt
-        self.x = x
-        self.y = y
+    def __init__(self, ekraan):
         self.ekraan = ekraan
-        self.tõke = pygame.image.load(self.pilt)
-        self.ekraan.blit(self.tõke, [self.x, self.y])
 
+    def loo_tokked(self, pilt, x, y):
+        self.tõke = pygame.image.load(pilt)
+        self.ekraan.blit(self.tõke, [x, y])
+        self.tõke_mask = pygame.mask.from_surface(self.tõke)
+        return self.tõke_mask, [x,y], pilt
 
 # Klass Auk() joonistab punkti (x, y) augu
 class Auk():
@@ -81,6 +83,12 @@ class Pall():
     def __init__(self, ekraan, x, y, kiirus_x, kiirus_y):
         self.x = x
         self.y = y
+        self.sein = False
+        self.liiv = False
+        self.vesi = False
+        self.last_x = x
+        self.last_y = y
+        self.aeglustus = 5
         self.kiirus_x = kiirus_x
         self.kiirus_y = kiirus_y
         self.ekraan = ekraan
@@ -89,49 +97,121 @@ class Pall():
 
     # Joonistab ekraanile palli
     def loo_pall(self):
-        self.pall = pygame.draw.circle(self.ekraan, "azure", [self.x, self.y], 18)
+        self.pall = pygame.Surface((18 * 2, 18 * 2), pygame.SRCALPHA)
+        pygame.draw.circle(self.pall, (255,255,255), (18, 18), 18)
+        self.ekraan.blit(self.pall,(self.x, self.y))
+        self.pall_mask = pygame.mask.from_surface(self.pall)
 
-    def liikumine(self, dt):
+    def liikumine(self, dt, tokked):
         #palli liikumine
+        if self.kiirus_x == 0 and self.kiirus_y == 0 and not self.vesi:
+            self.last_x = self.x
+            self.last_y = self.y
         self.x += self.kiirus_x * dt
         self.y -= self.kiirus_y * dt
 
-        # Palli põrkamine seinalt, kolmnurkadelt ja kivilt
-        if self.x < 90 or self.x > 934 or self.ekraan.get_at([int(self.x), int(self.y)]) == pygame.Color(250, 250, 250, 255) or self.ekraan.get_at([int(self.x), int(self.y)]) == pygame.Color(127, 127, 127, 255):
-            self.kiirus_x *= -1
-        if self.y < 190 or self.y > 678 or self.ekraan.get_at([int(self.x), int(self.y)]) == pygame.Color(250, 250, 250, 255) or self.ekraan.get_at([int(self.x), int(self.y)]) == pygame.Color(127, 127, 127, 255):
-            self.kiirus_y *= -1
-
-        # Aeglustus, sh liiv
-        if self.kiirus_x > 0 and self.ekraan.get_at([int(self.x), int(self.y)]) == pygame.Color(239, 228, 176, 255):
-            self.kiirus_x -= 5
-        elif self.kiirus_x < 0 and self.ekraan.get_at([int(self.x), int(self.y)]) == pygame.Color(239, 228, 176, 255):
-            self.kiirus_x += 5
-        elif self.kiirus_x > 0:
-            self.kiirus_x -= 0.5
-        elif self.kiirus_x < 0:
-            self.kiirus_x += 0.5
-
-
-        if self.kiirus_y > 0 and self.ekraan.get_at([int(self.x), int(self.y)]) == pygame.Color(239, 228, 176, 255):
-            self.kiirus_y -= 5
-        elif self.kiirus_y < 0 and self.ekraan.get_at([int(self.x), int(self.y)]) == pygame.Color(239, 228, 176, 255):
-            self.kiirus_y += 5
-        elif self.kiirus_y > 0:
-            self.kiirus_y -= 0.5
-        elif self.kiirus_y < 0:
-            self.kiirus_y += 0.5
-        
-
+        # Palli põrkamine
+        for toke in tokked:
+            ox = toke[1][0]
+            oy = toke[1][1]
+            offset = int(self.x - ox), int(self.y -  oy)
+            collision = toke[0].overlap(self.pall_mask, offset)
+            if collision:
+                if toke[2] == sein_ver and not self.sein:
+                    vector = pygame.Vector2(self.kiirus_x,self.kiirus_y)
+                    vector = vector.reflect([0, 1])
+                    self.kiirus_x = -vector.x
+                    self.kiirus_y = -vector.y
+                    self.sein = True
+                if toke[2] == sein_hor and not self.sein:
+                    vector = pygame.Vector2(self.kiirus_x, self.kiirus_y)
+                    vector = vector.reflect([1, 0])
+                    self.kiirus_x = -vector.x
+                    self.kiirus_y = -vector.y
+                    self.sein = True
+                if toke[2] == kolmnurk1:
+                    if self.x < (ox + toke[0].get_size()[0]/2) and self.y >= oy - 30:
+                        vector = pygame.Vector2(self.kiirus_x, self.kiirus_y)
+                        vector = vector.reflect([1, 1.7])
+                        self.kiirus_x = -vector.x
+                        self.kiirus_y = -vector.y
+                    elif self.x > (ox + toke[0].get_size()[0]/2) and self.y >= oy - 30:
+                        vector = pygame.Vector2(self.kiirus_x, self.kiirus_y)
+                        vector = vector.reflect([-1, 1.7])
+                        self.kiirus_x = -vector.x
+                        self.kiirus_y = -vector.y
+                    elif self.y < oy - 30:
+                        vector = pygame.Vector2(self.kiirus_x, self.kiirus_y)
+                        vector = vector.reflect([1, 0])
+                        self.kiirus_x = -vector.x
+                        self.kiirus_y = -vector.y
+                if toke[2] == kolmnurk2:
+                    if self.x < (ox + toke[0].get_size()[0]/2) and self.y <= oy + toke[0].get_size()[1] - 3:
+                        vector = pygame.Vector2(self.kiirus_x, self.kiirus_y)
+                        vector = vector.reflect([-1, 1.7])
+                        self.kiirus_x = -vector.x
+                        self.kiirus_y = -vector.y
+                    elif self.x > (ox + toke[0].get_size()[0]/2) and self.y <= oy + toke[0].get_size()[1] - 3:
+                        vector = pygame.Vector2(self.kiirus_x, self.kiirus_y)
+                        vector = vector.reflect([1, 1.7])
+                        self.kiirus_x = -vector.x
+                        self.kiirus_y = -vector.y
+                    elif self.y > oy + toke[0].get_size()[1] - 3:
+                        print(toke[0].get_size())
+                        vector = pygame.Vector2(self.kiirus_x, self.kiirus_y)
+                        vector = vector.reflect([1, 0])
+                        self.kiirus_x = -vector.x
+                        self.kiirus_y = -vector.y
+                if toke[2] == kivi:
+                    pass
+                if toke[2] == liiv:
+                    self.aeglustus = 50
+                    self.liiv = True
+                if toke[2] == vesi:
+                    self.aeglustus = 60
+                    self.vesi = True
+                    if self.kiirus_x == 0 and self.kiirus_y == 0:
+                        self.x = self.last_x
+                        self.y = self.last_y
+            elif not collision:
+                if toke[2] == liiv and not self.vesi:
+                    self.aeglustus = 5
+                    self.liiv = False
+                if toke[2] == sein_ver or toke[2] == sein_hor:
+                    self.sein = False
+                if toke[2] == vesi and not self.liiv:
+                    self.aeglustus = 5
+                    self.vesi = False
+        # Aeglustus
+        vector = pygame.Vector2(self.kiirus_x, self.kiirus_y)
+        if vector.length() > 0 and self.kiirus_x != 0:
+            angle = abs(math.atan(self.kiirus_y/self.kiirus_x))
+            if self.kiirus_x > 0:
+                self.kiirus_x = round((vector.length() - self.aeglustus) * math.cos(angle))
+            elif self.kiirus_x < 0:
+                self.kiirus_x = round(-((vector.length() - self.aeglustus) * math.cos(angle)))
+            if self.kiirus_y > 0:
+                self.kiirus_y = round((vector.length() - self.aeglustus) * math.sin(angle))
+            elif self.kiirus_y < 0:
+                self.kiirus_y = round(-((vector.length() - self.aeglustus) * math.sin(angle)))
+        elif self.kiirus_x == 0 and abs(self.kiirus_y > 0):
+            if self.kiirus_y > 0:
+                self.kiirus_y -= self.aeglustus
+            elif self.kiirus_y > 0:
+                self.kiirus_y += self.aeglustus
+        if vector.length() <= 30:
+            self.kiirus_x = 0
+            self.kiirus_y = 0
 
         #Auku sisse loomine saamine
-        if self.ekraan.get_at([int(self.x), int(self.y)]) == pygame.Color(0, 0, 0, 255):
-            self.pall = pygame.draw.circle(aken, "azure", [900, 434], 18)
+        if self.ekraan.get_at([int(self.x + self.pall_mask.get_size()[0]/2), int(self.y + self.pall_mask.get_size()[1]/2)]) == pygame.Color(0, 0, 0, 255):
+            self.ekraan.blit(self.pall,(900 - self.pall_mask.get_size()[0]/2, 434 - self.pall_mask.get_size()[0]/2))
             self.kiirus_y = 0
             self.kiirus_x = 0
         else:
-            self.pall = pygame.draw.circle(aken, "azure", [self.x, self.y], 18)
-            
+            self.ekraan.blit(self.pall,(self.x, self.y))
+
+
     #X ja Y kiiruse arvutamine koordinaatide muudu järgi
     def look(self):
         loogi_tugevus = 5
@@ -161,6 +241,8 @@ lookis = False
 #viimased kaks numbrid on x kiirus ja y kiirus et palli liikuma panna
 pall = Pall(aken, 200, 434, 0, 0)
 pall.loo_pall()
+tõkked = Tõkked(aken)
+tokked = []
 while mäng_käib:
     # Hiire positsiooni saamine
     hiire_x, hiire_y = pygame.mouse.get_pos()
@@ -192,6 +274,7 @@ while mäng_käib:
             #Lõppkoordinaatide salvestamine
             pall.lopp_koord[0] = hiire_x
             pall.lopp_koord[1] = hiire_y
+            #Et palli ei saaks liikumise ajal uuesti lüüa
             if pall.kiirus_x == 0 and pall.kiirus_y == 0:
                 pall.look()
 
@@ -201,32 +284,46 @@ while mäng_käib:
 
     # loome isendi klassist Auk()
     auk = Auk(aken, 900, 434)
-
+    sein_list_hor1 = seinad.sein_hor_mask, [0, 100],  sein_hor
+    sein_list_hor2 = seinad.sein_hor_mask, [0, 688],  sein_hor
+    sein_list_ver1 = seinad.sein_ver_mask, [0, 100], sein_ver
+    sein_list_ver2 = seinad.sein_ver_mask, [944, 100],sein_ver
     # Vastavalt valitud tasemele lisame tõkked; 1. tasemel tõkkeid pole.
     if tase == 2:
         # loome isendid klassist Tõkked()
-        tõke1 = Tõkked(aken, kolmnurk1, 150, 425)
-        tõke2 = Tõkked(aken, kolmnurk2, 450, 180)
+        tõke1 = tõkked.loo_tokked(kolmnurk1, 150, 425)
+        tõke2 = tõkked.loo_tokked(kolmnurk2, 450, 180)
+        tokked = [tõke1, tõke2, sein_list_hor1, sein_list_hor2, sein_list_ver1, sein_list_ver2]
+        pall.liikumine(dt, tokked)
+
     elif tase == 3:
         # loome isendid klassist Tõkked()
-        tõke1 = Tõkked(aken, kolmnurk1, 150, 425)
-        tõke2 = Tõkked(aken, liiv, 450, 180)
+        tõke1 = tõkked.loo_tokked(kolmnurk1, 150, 425)
+        tõke2 = tõkked.loo_tokked(liiv, 450, 180)
+        tokked = [tõke1, tõke2, sein_list_hor1, sein_list_hor2, sein_list_ver1, sein_list_ver2]
+        pall.liikumine(dt, tokked)
     elif tase == 4:
         # loome isendid klassist Tõkked()
-        tõke1 = Tõkked(aken, kolmnurk1, 150, 425)
-        tõke2 = Tõkked(aken, vesi, 450, 180)
-        tõke3 = Tõkked(aken, liiv, 600, 400)
+        tõke1 = tõkked.loo_tokked(kolmnurk1, 150, 425)
+        tõke2 = tõkked.loo_tokked(vesi, 450, 180)
+        tõke3 = tõkked.loo_tokked(liiv, 600, 400)
+        tokked = [tõke1, tõke2, tõke3, sein_list_hor1, sein_list_hor2, sein_list_ver1, sein_list_ver2]
+        pall.liikumine(dt, tokked)
     elif tase == 5:
         # loome isendid klassist Tõkked()
-        tõke1 = Tõkked(aken, liiv, 450, 180)
-        tõke2 = Tõkked(aken, vesi, 600, 400)
-        tõke3 = Tõkked(aken, kivi, 100, 550)
-        tõke4 = Tõkked(aken, kivi, 250, 525)
-        tõke5 = Tõkked(aken, kivi, 360, 375)
+        tõke1 = tõkked.loo_tokked(liiv, 450, 180)
+        tõke2 = tõkked.loo_tokked(vesi, 600, 400)
+        tõke3 = tõkked.loo_tokked(kivi, 100, 550)
+        tõke4 = tõkked.loo_tokked(kivi, 250, 525)
+        tõke5 = tõkked.loo_tokked(kivi, 360, 375)
+        tokked = [tõke1, tõke2, tõke3, tõke4, tõke5, sein_list_hor1, sein_list_hor2, sein_list_ver1, sein_list_ver2]
+        pall.liikumine(dt, tokked)
+    else:
+        tokked = [sein_list_hor1, sein_list_hor2, sein_list_ver1, sein_list_ver2]
+        pall.liikumine(dt, tokked)
 
     manager.update(dt)
     manager.draw_ui(aken)
-    pall.liikumine(dt)
     pygame.display.flip()
 
 pygame.quit()
