@@ -96,22 +96,34 @@ class Pall():
         self.x += self.kiirus_x * dt
         self.y -= self.kiirus_y * dt
 
-        # Palli põrkamine seinalt
-        if self.x < 90 or self.x > 934:
+        # Palli põrkamine seinalt, kolmnurkadelt ja kivilt
+        if self.x < 90 or self.x > 934 or self.ekraan.get_at([int(self.x), int(self.y)]) == pygame.Color(250, 250, 250, 255) or self.ekraan.get_at([int(self.x), int(self.y)]) == pygame.Color(127, 127, 127, 255):
             self.kiirus_x *= -1
-        if self.y < 190 or self.y > 678:
+        if self.y < 190 or self.y > 678 or self.ekraan.get_at([int(self.x), int(self.y)]) == pygame.Color(250, 250, 250, 255) or self.ekraan.get_at([int(self.x), int(self.y)]) == pygame.Color(127, 127, 127, 255):
             self.kiirus_y *= -1
 
-        # Aeglustus
-        if self.kiirus_x > 0:
+        # Aeglustus, sh liiv
+        if self.kiirus_x > 0 and self.ekraan.get_at([int(self.x), int(self.y)]) == pygame.Color(239, 228, 176, 255):
+            self.kiirus_x -= 5
+        elif self.kiirus_x < 0 and self.ekraan.get_at([int(self.x), int(self.y)]) == pygame.Color(239, 228, 176, 255):
+            self.kiirus_x += 5
+        elif self.kiirus_x > 0:
             self.kiirus_x -= 0.5
         elif self.kiirus_x < 0:
             self.kiirus_x += 0.5
 
-        if self.kiirus_y > 0 and abs(self.kiirus_y) >= abs(self.kiirus_x):
+
+        if self.kiirus_y > 0 and self.ekraan.get_at([int(self.x), int(self.y)]) == pygame.Color(239, 228, 176, 255):
+            self.kiirus_y -= 5
+        elif self.kiirus_y < 0 and self.ekraan.get_at([int(self.x), int(self.y)]) == pygame.Color(239, 228, 176, 255):
+            self.kiirus_y += 5
+        elif self.kiirus_y > 0:
             self.kiirus_y -= 0.5
-        elif self.kiirus_y < 0 and abs(self.kiirus_y) >= abs(self.kiirus_x):
+        elif self.kiirus_y < 0:
             self.kiirus_y += 0.5
+        
+
+
         #Auku sisse loomine saamine
         if self.ekraan.get_at([int(self.x), int(self.y)]) == pygame.Color(0, 0, 0, 255):
             self.pall = pygame.draw.circle(aken, "azure", [900, 434], 18)
@@ -119,7 +131,7 @@ class Pall():
             self.kiirus_x = 0
         else:
             self.pall = pygame.draw.circle(aken, "azure", [self.x, self.y], 18)
-
+            
     #X ja Y kiiruse arvutamine koordinaatide muudu järgi
     def look(self):
         loogi_tugevus = 5
@@ -127,9 +139,9 @@ class Pall():
         x_muutus = self.alg_koord[0] - self.lopp_koord[0]
         y_muutus = self.alg_koord[1] - self.lopp_koord[1]
 
-        self.kiirus_x =  x_muutus * loogi_tugevus
+        self.kiirus_x = x_muutus * loogi_tugevus
         #palli y liikumise pidi teistpidi keerama millegipärast
-        self.kiirus_y =  y_muutus * loogi_tugevus * -1
+        self.kiirus_y = y_muutus * loogi_tugevus * -1
 
 # Teade taseme valimiseks
 tasemed = Tekstikast(aken, 50, 5, 110, 35, "Vali tase")
@@ -180,7 +192,6 @@ while mäng_käib:
             #Lõppkoordinaatide salvestamine
             pall.lopp_koord[0] = hiire_x
             pall.lopp_koord[1] = hiire_y
-            #Et palli ei saaks liikumise ajal uuesti lüüa
             if pall.kiirus_x == 0 and pall.kiirus_y == 0:
                 pall.look()
 
