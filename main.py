@@ -14,12 +14,10 @@ aken.fill([255, 255, 255])
 # Piltide määramine
 sein_hor = "sein_horisontaalne.jpg"
 sein_ver = "sein_vertikaalne.jpg"
-vesi = "vesi.png"
-kivi = "kivi.png"
 kolmnurk1 = "kolmnurk1.png"
 kolmnurk2 = "kolmnurk2.png"
 liiv = "liiv.png"
-
+vesi = "vesi.png"
 
 # Klass Seinad() joonistab aknasse teateriba ning mänguplatsi piiravad seinad
 class Seinad():
@@ -162,8 +160,6 @@ class Pall():
                         vector = vector.reflect([1, 0])
                         self.kiirus_x = -vector.x
                         self.kiirus_y = -vector.y
-                if toke[2] == kivi:
-                    pass
                 if toke[2] == liiv:
                     self.aeglustus = 50
                     self.liiv = True
@@ -311,12 +307,11 @@ while mäng_käib:
         pall.liikumine(dt, tokked)
     elif tase == 5:
         # loome isendid klassist Tõkked()
-        tõke1 = tõkked.loo_tokked(liiv, 450, 180)
-        tõke2 = tõkked.loo_tokked(vesi, 600, 400)
-        tõke3 = tõkked.loo_tokked(kivi, 100, 550)
-        tõke4 = tõkked.loo_tokked(kivi, 250, 525)
-        tõke5 = tõkked.loo_tokked(kivi, 360, 375)
-        tokked = [tõke1, tõke2, tõke3, tõke4, tõke5, sein_list_hor1, sein_list_hor2, sein_list_ver1, sein_list_ver2]
+        tõke1 = tõkked.loo_tokked(vesi, 90, 180)
+        tõke2 = tõkked.loo_tokked(liiv, 600, 500)
+        tõke3 = tõkked.loo_tokked(kolmnurk1, 150, 425)
+        tõke4 = tõkked.loo_tokked(kolmnurk2, 450, 180)
+        tokked = [tõke1, tõke2, tõke3, tõke4, sein_list_hor1, sein_list_hor2, sein_list_ver1, sein_list_ver2]
         pall.liikumine(dt, tokked)
     else:
         tokked = [sein_list_hor1, sein_list_hor2, sein_list_ver1, sein_list_ver2]
