@@ -1,6 +1,4 @@
-import pygame_gui
-import math
-import pygame
+import pygame_gui, pygame, math, sys
 
 sein_hor = "sein_horisontaalne.jpg"
 sein_ver = "sein_vertikaalne.jpg"
@@ -188,3 +186,7 @@ class Pall():
         self.kiirus_x = x_muutus * loogi_tugevus
         #palli y liikumise pidi teistpidi keerama millegipärast
         self.kiirus_y = y_muutus * loogi_tugevus * -1
+
+if __name__ == '__main__':
+    print("Käivita main fail")
+    sys.exit()
